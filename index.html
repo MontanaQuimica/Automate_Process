@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executando Processo</title>
+    <style>
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 20px;
+        }
+
+        .message {
+            font-size: 20px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: none;
+        }
+
+        .progress-container svg {
+            transform: rotate(-90deg);
+            width: 120px;
+            height: 120px;
+        }
+
+        .progress-container circle {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+        }
+
+        .progress-container .bg {
+            stroke: #f3f3f3;
+        }
+
+        .progress-container .progress {
+            stroke: #3498db;
+            stroke-dasharray: 314.16;
+            stroke-dashoffset: 314.16;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #555555;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .success {
+            color: #2ecc71;
+        }
+
+        .info {
+            color: #3498db;
+        }
+    </style>
+    <script>
+        window.onload = function() {
+            let currentMessage = "Executando Processo do Power Automate, peço que aguarde";
+            let isProcessing = false;
+            let timeLeft = 20;
+
+            function updateMessage(message, isProcessingState = false) {
+                document.querySelector('.message').innerHTML = message;
+                document.querySelector('.progress-container').style.display = isProcessingState ? 'block' : 'none';
+            }
+
+            function updateProgress(timeLeft) {
+                const progressCircle = document.querySelector('.progress');
+                const progressText = document.querySelector('.progress-text');
+                const progress = (timeLeft / 20) * 314.16;
+                progressCircle.style.strokeDashoffset = progress;
+                progressText.textContent = timeLeft;
+            }   
+
+            function closeWindow() {
+                window.close();
+            }
+
+            updateMessage("Executando Processo do Power Automate, peço que aguarde");
+
+            fetch('https://192.168.5.34:5000/executar-programa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    code: "1_ohqAiJB%)yXKPc=j\"vW5G4_\"&`9q+M!@y1$Md40k5{_£&X$G",
+                    diretorio: "C:\\Projetos\\executa-programa",
+                    programa: "putty.exe"
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    currentMessage = "Processo executado com sucesso!<br>O programa está em execução, você já pode verificar.";
+                    isProcessing = true;
+                    updateMessage(currentMessage, isProcessing);
+
+                    const timer = setInterval(() => {
+                        if (timeLeft > 0) {
+                            timeLeft--;
+                            updateProgress(timeLeft);
+                            document.querySelector('.footer').textContent = `Esta página será fechada em ${timeLeft} segundos.`;
+                        } else {
+                            clearInterval(timer);
+                            document.querySelector('.footer').textContent = "Você pensou, o RPA já fez :D";
+                            setTimeout(closeWindow, 2000);
+                        }
+                    }, 1000);
+
+                } else {
+                    currentMessage = "Erro ao executar o processo!<br>Por favor, informe ao Departamento de TI via GLPI.<br><a href='https://helpdesk.montana.com.br/front/helpdesk.public.php?create_ticket=1' target='_blank'>Clique aqui para abrir um ticket</a>";
+                    updateMessage(currentMessage);
+                    document.querySelector('.message').classList.add('error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                currentMessage = "Erro ao executar o processo!<br>Por favor, informe ao Departamento de TI via GLPI.<br><a href='https://helpdesk.montana.com.br/front/helpdesk.public.php?create_ticket=1' target='_blank'>Clique aqui para abrir um ticket</a>";
+                updateMessage(currentMessage);
+                document.querySelector('.message').classList.add('error');
+            });
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="image.png" alt="Power Automate Logo" width="200">
+        </div>
+        <div class="message">
+            Executando Processo do Power Automate, peço que aguarde
+        </div>
+        <div class="progress-container">
+            <svg>
+                <circle class="bg" cx="60" cy="60" r="50"></circle>
+                <circle class="progress" cx="60" cy="60" r="50"></circle>
+            </svg>
+            <div class="progress-text"></div>
+        </div>
+        <div class="footer"></div>
+    </div>
+</body>
+</html>
